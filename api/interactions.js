@@ -4,6 +4,22 @@ import { handleSale } from "../src/commands/sale.js";
 import { handleBalance } from "../src/commands/balance.js";
 import { handlePayout } from "../src/commands/payout.js";
 
+// Disable Vercel's automatic body parsing so we get the raw body for signature verification
+export const config = {
+  api: {
+    bodyParser: false,
+  },
+};
+
+function readBody(req) {
+  return new Promise((resolve, reject) => {
+    let data = "";
+    req.on("data", (chunk) => (data += chunk));
+    req.on("end", () => resolve(data));
+    req.on("error", reject);
+  });
+}
+
 export default async function handler(req, res) {
   if (req.method !== "POST") {
     return res.status(405).end("Method not allowed");
@@ -11,14 +27,14 @@ export default async function handler(req, res) {
 
   const signature = req.headers["x-signature-ed25519"];
   const timestamp = req.headers["x-signature-timestamp"];
-  const rawBody = JSON.stringify(req.body);
+  const rawBody = await readBody(req);
 
   const isValid = await verifyKey(rawBody, signature, timestamp, process.env.DISCORD_PUBLIC_KEY);
   if (!isValid) {
     return res.status(401).end("Invalid request signature");
   }
 
-  const interaction = req.body;
+  const interaction = JSON.parse(rawBody);
 
   if (interaction.type === InteractionType.PING) {
     return res.json({ type: InteractionResponseType.PONG });
