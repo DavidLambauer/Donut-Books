@@ -31,6 +31,11 @@ CREATE TABLE sales (
   created_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
 );
 
+-- Disable RLS (bot uses server-side anon key only)
+ALTER TABLE payouts DISABLE ROW LEVEL SECURITY;
+ALTER TABLE expenses DISABLE ROW LEVEL SECURITY;
+ALTER TABLE sales DISABLE ROW LEVEL SECURITY;
+
 -- Index for fast unsettled queries
 CREATE INDEX idx_expenses_unsettled ON expenses(payout_id) WHERE payout_id IS NULL;
 CREATE INDEX idx_sales_unsettled ON sales(payout_id) WHERE payout_id IS NULL;
