@@ -8,7 +8,8 @@
     "doc": "docs"
   },
   "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1"
+    "test": "vitest run",
+    "test:watch": "vitest"
   },
   "keywords": [],
   "author": "",
@@ -16,5 +17,8 @@
   "dependencies": {
     "@supabase/supabase-js": "^2.99.2",
     "discord-interactions": "^4.4.0"
+  },
+  "devDependencies": {
+    "vitest": "^4.1.0"
   }
 }
