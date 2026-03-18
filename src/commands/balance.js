@@ -24,14 +24,34 @@ export async function handleBalance(interaction) {
   const expenses = expensesResult.data;
   const sales = salesResult.data;
 
-  if (expenses.length === 0) {
+  if (expenses.length === 0 && sales.length === 0) {
     return {
       type: InteractionResponseType.CHANNEL_MESSAGE_WITH_SOURCE,
       data: {
         embeds: [{
           title: "Current Cycle",
-          description: "No expenses logged yet. Use `/expense` to get started.",
+          description: "No expenses or sales logged yet. Use `/expense` or `/sale` to get started.",
           color: 0x5865f2,
+        }],
+      },
+    };
+  }
+
+  if (expenses.length === 0 && sales.length > 0) {
+    const totalRevenue = sales.reduce((sum, s) => sum + Number(s.total_revenue), 0);
+    return {
+      type: InteractionResponseType.CHANNEL_MESSAGE_WITH_SOURCE,
+      data: {
+        embeds: [{
+          title: "Current Cycle",
+          color: 0x57f287,
+          fields: [
+            { name: "Total Expenses", value: "$0", inline: true },
+            { name: "Total Revenue", value: `$${formatNumber(totalRevenue)}`, inline: true },
+            { name: "Profit", value: `$${formatNumber(totalRevenue)}`, inline: true },
+          ],
+          description: "No expenses yet — all revenue is pure profit. Log expenses with `/expense` if there are any.",
+          footer: { text: "Use /payout to settle this cycle" },
         }],
       },
     };

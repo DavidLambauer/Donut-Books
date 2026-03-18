@@ -24,14 +24,61 @@ export async function handlePayout(interaction) {
   const expenses = expensesResult.data;
   const sales = salesResult.data;
 
-  if (expenses.length === 0) {
+  if (expenses.length === 0 && sales.length === 0) {
     return {
       type: InteractionResponseType.CHANNEL_MESSAGE_WITH_SOURCE,
       data: {
         embeds: [{
           title: "Nothing to Settle",
-          description: "No expenses in the current cycle.",
+          description: "No expenses or sales in the current cycle.",
           color: 0x5865f2,
+        }],
+      },
+    };
+  }
+
+  if (expenses.length === 0 && sales.length > 0) {
+    const totalRevenue = sales.reduce((sum, s) => sum + Number(s.total_revenue), 0);
+
+    const { data: payoutRecord, error: payoutError } = await supabase
+      .from("payouts")
+      .insert({
+        total_expenses: 0,
+        total_revenue: totalRevenue,
+        total_profit: totalRevenue,
+        breakdown: [],
+      })
+      .select()
+      .single();
+
+    if (payoutError) {
+      return {
+        type: InteractionResponseType.CHANNEL_MESSAGE_WITH_SOURCE,
+        data: {
+          embeds: [{
+            title: "Error",
+            description: `Failed to create payout: ${payoutError.message}`,
+            color: 0xff0000,
+          }],
+        },
+      };
+    }
+
+    await supabase.from("sales").update({ payout_id: payoutRecord.id }).is("payout_id", null);
+
+    return {
+      type: InteractionResponseType.CHANNEL_MESSAGE_WITH_SOURCE,
+      data: {
+        embeds: [{
+          title: "Payout Settled",
+          description: "No expenses this cycle — all revenue is pure profit. Split it however you like!",
+          color: 0x57f287,
+          fields: [
+            { name: "Total Revenue", value: `$${formatNumber(totalRevenue)}`, inline: true },
+            { name: "Total Profit", value: `$${formatNumber(totalRevenue)}`, inline: true },
+          ],
+          footer: { text: "Cycle settled — all sales have been cleared" },
+          timestamp: new Date().toISOString(),
         }],
       },
     };
