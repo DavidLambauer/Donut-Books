@@ -21,7 +21,13 @@ export async function handleExpense(interaction) {
   if (error) {
     return {
       type: InteractionResponseType.CHANNEL_MESSAGE_WITH_SOURCE,
-      data: { content: `Failed to log expense: ${error.message}` },
+      data: {
+        embeds: [{
+          title: "Failed to log expense",
+          description: error.message,
+          color: 0xff0000,
+        }],
+      },
     };
   }
 
@@ -30,7 +36,18 @@ export async function handleExpense(interaction) {
   return {
     type: InteractionResponseType.CHANNEL_MESSAGE_WITH_SOURCE,
     data: {
-      content: `Logged ${formatNumber(quantity)} ${item} for $${formatNumber(totalCost)} ($${formatNumber(perUnit)}/ea) by ${user.username}`,
+      embeds: [{
+        title: "Expense Logged",
+        color: 0xed4245,
+        fields: [
+          { name: "Item", value: item, inline: true },
+          { name: "Quantity", value: formatNumber(quantity), inline: true },
+          { name: "Total", value: `$${formatNumber(totalCost)}`, inline: true },
+          { name: "Price/ea", value: `$${formatNumber(perUnit)}`, inline: true },
+        ],
+        footer: { text: `Logged by ${user.username}` },
+        timestamp: new Date().toISOString(),
+      }],
     },
   };
 }

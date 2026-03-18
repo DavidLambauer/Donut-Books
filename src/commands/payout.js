@@ -11,7 +11,13 @@ export async function handlePayout(interaction) {
   if (expensesResult.error || salesResult.error) {
     return {
       type: InteractionResponseType.CHANNEL_MESSAGE_WITH_SOURCE,
-      data: { content: "Failed to fetch data for payout." },
+      data: {
+        embeds: [{
+          title: "Error",
+          description: "Failed to fetch data for payout.",
+          color: 0xff0000,
+        }],
+      },
     };
   }
 
@@ -21,7 +27,13 @@ export async function handlePayout(interaction) {
   if (expenses.length === 0) {
     return {
       type: InteractionResponseType.CHANNEL_MESSAGE_WITH_SOURCE,
-      data: { content: "No expenses to settle in the current cycle." },
+      data: {
+        embeds: [{
+          title: "Nothing to Settle",
+          description: "No expenses in the current cycle.",
+          color: 0x5865f2,
+        }],
+      },
     };
   }
 
@@ -40,17 +52,19 @@ export async function handlePayout(interaction) {
   const totalRevenue = sales.reduce((sum, s) => sum + Number(s.total_revenue), 0);
   const totalProfit = totalRevenue - totalExpenses;
 
-  const breakdown = Object.entries(playerTotals).map(([userId, player]) => {
-    const share = player.invested / totalExpenses;
-    const payout = player.invested + totalProfit * share;
-    return {
-      discord_user_id: userId,
-      username: player.username,
-      invested: player.invested,
-      share: share,
-      payout: Math.round(payout),
-    };
-  });
+  const breakdown = Object.entries(playerTotals)
+    .sort(([, a], [, b]) => b.invested - a.invested)
+    .map(([userId, player]) => {
+      const share = player.invested / totalExpenses;
+      const payout = player.invested + totalProfit * share;
+      return {
+        discord_user_id: userId,
+        username: player.username,
+        invested: player.invested,
+        share: share,
+        payout: Math.round(payout),
+      };
+    });
 
   const { data: payoutRecord, error: payoutError } = await supabase
     .from("payouts")
@@ -66,7 +80,13 @@ export async function handlePayout(interaction) {
   if (payoutError) {
     return {
       type: InteractionResponseType.CHANNEL_MESSAGE_WITH_SOURCE,
-      data: { content: `Failed to create payout: ${payoutError.message}` },
+      data: {
+        embeds: [{
+          title: "Error",
+          description: `Failed to create payout: ${payoutError.message}`,
+          color: 0xff0000,
+        }],
+      },
     };
   }
 
@@ -75,24 +95,27 @@ export async function handlePayout(interaction) {
     supabase.from("sales").update({ payout_id: payoutRecord.id }).is("payout_id", null),
   ]);
 
-  let lines = [
-    `**Payout Settled**`,
-    `Total Expenses: $${formatNumber(totalExpenses)}`,
-    `Total Revenue: $${formatNumber(totalRevenue)}`,
-    `Profit: $${formatNumber(totalProfit)}`,
-    ``,
-    `| Player | Invested | Share | Payout |`,
-    `|--------|----------|-------|--------|`,
-  ];
+  const profitColor = totalProfit >= 0 ? 0x57f287 : 0xed4245;
 
-  for (const entry of breakdown) {
-    lines.push(
-      `| ${entry.username} | $${formatNumber(entry.invested)} | ${(entry.share * 100).toFixed(1)}% | $${formatNumber(entry.payout)} |`,
-    );
-  }
+  const playerLines = breakdown.map((entry) => {
+    return `**${entry.username}** — Invested $${formatNumber(entry.invested)} (${(entry.share * 100).toFixed(1)}%) → Payout: $${formatNumber(entry.payout)}`;
+  });
 
   return {
     type: InteractionResponseType.CHANNEL_MESSAGE_WITH_SOURCE,
-    data: { content: lines.join("\n") },
+    data: {
+      embeds: [{
+        title: "Payout Settled",
+        color: profitColor,
+        fields: [
+          { name: "Total Expenses", value: `$${formatNumber(totalExpenses)}`, inline: true },
+          { name: "Total Revenue", value: `$${formatNumber(totalRevenue)}`, inline: true },
+          { name: "Profit", value: `$${formatNumber(totalProfit)}`, inline: true },
+          { name: "Player Breakdown", value: playerLines.join("\n") },
+        ],
+        footer: { text: "Cycle settled — all expenses and sales have been cleared" },
+        timestamp: new Date().toISOString(),
+      }],
+    },
   };
 }

@@ -19,14 +19,33 @@ export async function handleSale(interaction) {
   if (error) {
     return {
       type: InteractionResponseType.CHANNEL_MESSAGE_WITH_SOURCE,
-      data: { content: `Failed to log sale: ${error.message}` },
+      data: {
+        embeds: [{
+          title: "Failed to log sale",
+          description: error.message,
+          color: 0xff0000,
+        }],
+      },
     };
   }
+
+  const perUnit = totalRevenue / quantity;
 
   return {
     type: InteractionResponseType.CHANNEL_MESSAGE_WITH_SOURCE,
     data: {
-      content: `Logged sale of ${formatNumber(quantity)} Dried Kelp Blocks for $${formatNumber(totalRevenue)} by ${user.username}`,
+      embeds: [{
+        title: "Sale Logged",
+        color: 0x57f287,
+        fields: [
+          { name: "Item", value: "Dried Kelp Blocks", inline: true },
+          { name: "Quantity", value: formatNumber(quantity), inline: true },
+          { name: "Total", value: `$${formatNumber(totalRevenue)}`, inline: true },
+          { name: "Price/ea", value: `$${formatNumber(perUnit)}`, inline: true },
+        ],
+        footer: { text: `Logged by ${user.username}` },
+        timestamp: new Date().toISOString(),
+      }],
     },
   };
 }

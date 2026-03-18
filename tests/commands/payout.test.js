@@ -51,16 +51,18 @@ vi.mock("../../src/lib/supabase.js", () => {
 import { handlePayout } from "../../src/commands/payout.js";
 
 describe("handlePayout", () => {
-  it("settles_cycle_and_shows_breakdown", async () => {
+  it("settles_cycle_and_shows_embed_breakdown", async () => {
     const interaction = { member: { user: { id: "1" } } };
     const result = await handlePayout(interaction);
 
     expect(result.type).toBe(InteractionResponseType.CHANNEL_MESSAGE_WITH_SOURCE);
-    const content = result.data.content;
-    expect(content).toContain("Payout");
-    expect(content).toContain("David");
-    expect(content).toContain("Alex");
-    expect(content).toContain("15,000,000");
-    expect(content).toContain("20,000,000");
+    const embed = result.data.embeds[0];
+    expect(embed.title).toBe("Payout Settled");
+    expect(embed.fields).toContainEqual({ name: "Total Expenses", value: "$15,000,000", inline: true });
+    expect(embed.fields).toContainEqual({ name: "Total Revenue", value: "$20,000,000", inline: true });
+
+    const breakdown = embed.fields.find((f) => f.name === "Player Breakdown");
+    expect(breakdown.value).toContain("David");
+    expect(breakdown.value).toContain("Alex");
   });
 });

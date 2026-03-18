@@ -34,14 +34,16 @@ function makeInteraction(quantity, total) {
 }
 
 describe("handleSale", () => {
-  it("logs_a_sale_and_returns_confirmation", async () => {
+  it("logs_a_sale_and_returns_embed", async () => {
     const interaction = makeInteraction(5000, 3750000);
     const result = await handleSale(interaction);
 
     expect(result.type).toBe(InteractionResponseType.CHANNEL_MESSAGE_WITH_SOURCE);
-    expect(result.data.content).toContain("Dried Kelp Blocks");
-    expect(result.data.content).toContain("5,000");
-    expect(result.data.content).toContain("3,750,000");
-    expect(result.data.content).toContain("TestUser");
+    const embed = result.data.embeds[0];
+    expect(embed.title).toBe("Sale Logged");
+    expect(embed.fields).toContainEqual({ name: "Item", value: "Dried Kelp Blocks", inline: true });
+    expect(embed.fields).toContainEqual({ name: "Quantity", value: "5,000", inline: true });
+    expect(embed.fields).toContainEqual({ name: "Total", value: "$3,750,000", inline: true });
+    expect(embed.footer.text).toContain("TestUser");
   });
 });

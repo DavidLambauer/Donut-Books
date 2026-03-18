@@ -11,7 +11,13 @@ export async function handleBalance(interaction) {
   if (expensesResult.error || salesResult.error) {
     return {
       type: InteractionResponseType.CHANNEL_MESSAGE_WITH_SOURCE,
-      data: { content: "Failed to fetch balance data." },
+      data: {
+        embeds: [{
+          title: "Error",
+          description: "Failed to fetch balance data.",
+          color: 0xff0000,
+        }],
+      },
     };
   }
 
@@ -21,7 +27,13 @@ export async function handleBalance(interaction) {
   if (expenses.length === 0) {
     return {
       type: InteractionResponseType.CHANNEL_MESSAGE_WITH_SOURCE,
-      data: { content: "No expenses logged in the current cycle." },
+      data: {
+        embeds: [{
+          title: "Current Cycle",
+          description: "No expenses logged yet. Use `/expense` to get started.",
+          color: 0x5865f2,
+        }],
+      },
     };
   }
 
@@ -39,27 +51,31 @@ export async function handleBalance(interaction) {
 
   const totalRevenue = sales.reduce((sum, s) => sum + Number(s.total_revenue), 0);
   const totalProfit = totalRevenue - totalExpenses;
+  const profitColor = totalProfit >= 0 ? 0x57f287 : 0xed4245;
 
-  let lines = [
-    `**Current Cycle**`,
-    `Total Expenses: $${formatNumber(totalExpenses)}`,
-    `Total Revenue: $${formatNumber(totalRevenue)}`,
-    `Profit: $${formatNumber(totalProfit)}`,
-    ``,
-    `| Player | Invested | Share | Payout |`,
-    `|--------|----------|-------|--------|`,
-  ];
-
-  for (const [, player] of Object.entries(playerTotals)) {
-    const share = player.invested / totalExpenses;
-    const payout = player.invested + totalProfit * share;
-    lines.push(
-      `| ${player.username} | $${formatNumber(player.invested)} | ${(share * 100).toFixed(1)}% | $${formatNumber(Math.round(payout))} |`,
-    );
-  }
+  // Build player breakdown as a readable list
+  const playerLines = Object.entries(playerTotals)
+    .sort(([, a], [, b]) => b.invested - a.invested)
+    .map(([, player]) => {
+      const share = player.invested / totalExpenses;
+      const payout = player.invested + totalProfit * share;
+      return `**${player.username}** — Invested $${formatNumber(player.invested)} (${(share * 100).toFixed(1)}%) → Payout: $${formatNumber(Math.round(payout))}`;
+    });
 
   return {
     type: InteractionResponseType.CHANNEL_MESSAGE_WITH_SOURCE,
-    data: { content: lines.join("\n") },
+    data: {
+      embeds: [{
+        title: "Current Cycle",
+        color: profitColor,
+        fields: [
+          { name: "Total Expenses", value: `$${formatNumber(totalExpenses)}`, inline: true },
+          { name: "Total Revenue", value: `$${formatNumber(totalRevenue)}`, inline: true },
+          { name: "Profit", value: `$${formatNumber(totalProfit)}`, inline: true },
+          { name: "Player Breakdown", value: playerLines.join("\n") },
+        ],
+        footer: { text: "Use /payout to settle this cycle" },
+      }],
+    },
   };
 }

@@ -34,16 +34,19 @@ vi.mock("../../src/lib/supabase.js", () => {
 import { handleBalance } from "../../src/commands/balance.js";
 
 describe("handleBalance", () => {
-  it("shows_proportional_breakdown", async () => {
+  it("shows_proportional_breakdown_in_embed", async () => {
     const interaction = { member: { user: { id: "1" } } };
     const result = await handleBalance(interaction);
 
     expect(result.type).toBe(InteractionResponseType.CHANNEL_MESSAGE_WITH_SOURCE);
-    const content = result.data.content;
-    expect(content).toContain("15,000,000");
-    expect(content).toContain("20,000,000");
-    expect(content).toContain("5,000,000");
-    expect(content).toContain("David");
-    expect(content).toContain("Alex");
+    const embed = result.data.embeds[0];
+    expect(embed.title).toBe("Current Cycle");
+    expect(embed.fields).toContainEqual({ name: "Total Expenses", value: "$15,000,000", inline: true });
+    expect(embed.fields).toContainEqual({ name: "Total Revenue", value: "$20,000,000", inline: true });
+    expect(embed.fields).toContainEqual({ name: "Profit", value: "$5,000,000", inline: true });
+
+    const breakdown = embed.fields.find((f) => f.name === "Player Breakdown");
+    expect(breakdown.value).toContain("David");
+    expect(breakdown.value).toContain("Alex");
   });
 });
