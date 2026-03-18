@@ -73,13 +73,15 @@ export async function handleBalance(interaction) {
   const totalProfit = totalRevenue - totalExpenses;
   const profitColor = totalProfit >= 0 ? 0x57f287 : 0xed4245;
 
-  // Build player breakdown as a readable list
+  // Build player breakdown: reimbursement first, then profit share
   const playerLines = Object.entries(playerTotals)
     .sort(([, a], [, b]) => b.invested - a.invested)
     .map(([, player]) => {
       const share = player.invested / totalExpenses;
-      const payout = player.invested + totalProfit * share;
-      return `**${player.username}** — Invested $${formatNumber(player.invested)} (${(share * 100).toFixed(1)}%) → Payout: $${formatNumber(Math.round(payout))}`;
+      const profitShare = Math.round(totalProfit * share);
+      const totalPayout = player.invested + profitShare;
+      const profitSign = profitShare >= 0 ? "+" : "";
+      return `**${player.username}** (${(share * 100).toFixed(1)}%)\nSpent: $${formatNumber(player.invested)} · Profit: ${profitSign}$${formatNumber(profitShare)} · **Total: $${formatNumber(totalPayout)}**`;
     });
 
   return {

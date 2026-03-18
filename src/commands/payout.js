@@ -103,13 +103,15 @@ export async function handlePayout(interaction) {
     .sort(([, a], [, b]) => b.invested - a.invested)
     .map(([userId, player]) => {
       const share = player.invested / totalExpenses;
-      const payout = player.invested + totalProfit * share;
+      const profitShare = Math.round(totalProfit * share);
+      const totalPayout = player.invested + profitShare;
       return {
         discord_user_id: userId,
         username: player.username,
         invested: player.invested,
         share: share,
-        payout: Math.round(payout),
+        profitShare: profitShare,
+        payout: totalPayout,
       };
     });
 
@@ -145,7 +147,8 @@ export async function handlePayout(interaction) {
   const profitColor = totalProfit >= 0 ? 0x57f287 : 0xed4245;
 
   const playerLines = breakdown.map((entry) => {
-    return `**${entry.username}** — Invested $${formatNumber(entry.invested)} (${(entry.share * 100).toFixed(1)}%) → Payout: $${formatNumber(entry.payout)}`;
+    const profitSign = entry.profitShare >= 0 ? "+" : "";
+    return `**${entry.username}** (${(entry.share * 100).toFixed(1)}%)\nSpent: $${formatNumber(entry.invested)} · Profit: ${profitSign}$${formatNumber(entry.profitShare)} · **Total: $${formatNumber(entry.payout)}**`;
   });
 
   return {
