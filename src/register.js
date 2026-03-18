@@ -62,6 +62,24 @@ const commands = [
     name: "payout",
     description: "Settle the current cycle and calculate who gets what",
   },
+  {
+    name: "calculate",
+    description: "Calculate how many Blaze Rods you need for your Bones/Bone Blocks",
+    options: [
+      {
+        name: "bones",
+        description: "Number of Bones",
+        type: 4,
+        required: false,
+      },
+      {
+        name: "bone_blocks",
+        description: "Number of Bone Blocks",
+        type: 4,
+        required: false,
+      },
+    ],
+  },
 ];
 
 async function registerCommands() {
