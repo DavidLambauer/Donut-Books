@@ -1,6 +1,6 @@
-# Kelp Team Discord Bot
+# DonutBooks
 
-A Discord bot for tracking shared expenses and profits from DonutSMP kelp farm operations.
+Track shared expenses, sales, and profits for your DonutSMP farms. Log what you spend, record what you sell, and let DonutBooks calculate fair payouts based on everyone's investment.
 
 ## Setup
 
