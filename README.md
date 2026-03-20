@@ -16,6 +16,7 @@ Players share the costs of running a kelp farm. When supplies are bought, the bu
 | `/payout` | Settle the cycle — shows each player's share and who needs to pay whom |
 | `/history` | View transaction history, past cycle summaries, and a profit trend chart |
 | `/calculate` | Calculate blaze rod requirements |
+| `/calculate-ratio budget:<number> bone_block_price:<number> blaze_rod_price:<number>` | Calculate optimal Bone Block / Blaze Rod split for a budget (4:3 ratio) |
 
 ## Tech Stack
 
@@ -99,6 +100,7 @@ src/
     payout.js         # /payout command (with settlement transfers)
     sale.js           # /sale command
     history.js        # /history command (transactions, past cycles, chart)
+    calculate-ratio.js # /calculate-ratio command (budget-based purchasing)
   lib/
     discord.js        # Request verification + helpers
     settlements.js    # Settlement transfer algorithm
