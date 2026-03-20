@@ -5,7 +5,7 @@ import { formatNumber } from "../lib/discord.js";
 export async function handleBalance(interaction) {
   const [expensesResult, salesResult] = await Promise.all([
     supabase.from("expenses").select("discord_user_id, discord_username, total_cost").is("payout_id", null),
-    supabase.from("sales").select("total_revenue").is("payout_id", null),
+    supabase.from("sales").select("discord_user_id, discord_username, total_revenue").is("payout_id", null),
   ]);
 
   if (expensesResult.error || salesResult.error) {
@@ -39,6 +39,18 @@ export async function handleBalance(interaction) {
 
   if (expenses.length === 0 && sales.length > 0) {
     const totalRevenue = sales.reduce((sum, s) => sum + Number(s.total_revenue), 0);
+
+    const sellerTotals = {};
+    for (const s of sales) {
+      if (!sellerTotals[s.discord_user_id]) {
+        sellerTotals[s.discord_user_id] = { username: s.discord_username, revenue: 0 };
+      }
+      sellerTotals[s.discord_user_id].revenue += Number(s.total_revenue);
+    }
+    const salesLines = Object.values(sellerTotals)
+      .sort((a, b) => b.revenue - a.revenue)
+      .map((s) => `**${s.username}**: $${formatNumber(s.revenue)}`);
+
     return {
       type: InteractionResponseType.CHANNEL_MESSAGE_WITH_SOURCE,
       data: {
@@ -49,6 +61,7 @@ export async function handleBalance(interaction) {
             { name: "Total Expenses", value: "$0", inline: true },
             { name: "Total Revenue", value: `$${formatNumber(totalRevenue)}`, inline: true },
             { name: "Profit", value: `$${formatNumber(totalRevenue)}`, inline: true },
+            { name: "Sales Breakdown", value: salesLines.join("\n") },
           ],
           description: "No expenses yet — all revenue is pure profit. Log expenses with `/expense` if there are any.",
           footer: { text: "Use /payout to settle this cycle" },
@@ -84,6 +97,17 @@ export async function handleBalance(interaction) {
       return `**${player.username}** (${(share * 100).toFixed(1)}%)\nSpent: $${formatNumber(player.invested)} · Profit: ${profitSign}$${formatNumber(profitShare)} · **Total: $${formatNumber(totalPayout)}**`;
     });
 
+  const sellerTotals = {};
+  for (const s of sales) {
+    if (!sellerTotals[s.discord_user_id]) {
+      sellerTotals[s.discord_user_id] = { username: s.discord_username, revenue: 0 };
+    }
+    sellerTotals[s.discord_user_id].revenue += Number(s.total_revenue);
+  }
+  const salesLines = Object.values(sellerTotals)
+    .sort((a, b) => b.revenue - a.revenue)
+    .map((s) => `**${s.username}**: $${formatNumber(s.revenue)}`);
+
   return {
     type: InteractionResponseType.CHANNEL_MESSAGE_WITH_SOURCE,
     data: {
@@ -95,6 +119,7 @@ export async function handleBalance(interaction) {
           { name: "Total Revenue", value: `$${formatNumber(totalRevenue)}`, inline: true },
           { name: "Profit", value: `$${formatNumber(totalProfit)}`, inline: true },
           { name: "Player Breakdown", value: playerLines.join("\n") },
+          { name: "Sales Breakdown", value: salesLines.join("\n") },
         ],
         footer: { text: "Use /payout to settle this cycle" },
       }],
