@@ -1,11 +1,12 @@
 import { InteractionResponseType } from "discord-interactions";
 import supabase from "../lib/supabase.js";
 import { formatNumber } from "../lib/discord.js";
+import { calculateSettlements } from "../lib/settlements.js";
 
 export async function handlePayout(interaction) {
   const [expensesResult, salesResult] = await Promise.all([
     supabase.from("expenses").select("discord_user_id, discord_username, total_cost").is("payout_id", null),
-    supabase.from("sales").select("total_revenue").is("payout_id", null),
+    supabase.from("sales").select("discord_user_id, discord_username, total_revenue").is("payout_id", null),
   ]);
 
   if (expensesResult.error || salesResult.error) {
@@ -115,6 +116,19 @@ export async function handlePayout(interaction) {
       };
     });
 
+  const salesByPlayer = {};
+  for (const s of sales) {
+    if (!salesByPlayer[s.discord_user_id]) {
+      salesByPlayer[s.discord_user_id] = { username: s.discord_username, revenue: 0 };
+    }
+    salesByPlayer[s.discord_user_id].revenue += Number(s.total_revenue);
+  }
+
+  const settlements = calculateSettlements(breakdown, salesByPlayer);
+  const settlementLines = settlements.map(
+    (s) => `**${s.from}** → **${s.to}**: $${formatNumber(s.amount)}`
+  );
+
   const { data: payoutRecord, error: payoutError } = await supabase
     .from("payouts")
     .insert({
@@ -151,18 +165,24 @@ export async function handlePayout(interaction) {
     return `**${entry.username}** (${(entry.share * 100).toFixed(1)}%)\nSpent: $${formatNumber(entry.invested)} · Profit: ${profitSign}$${formatNumber(entry.profitShare)} · **Total: $${formatNumber(entry.payout)}**`;
   });
 
+  const fields = [
+    { name: "Total Expenses", value: `$${formatNumber(totalExpenses)}`, inline: true },
+    { name: "Total Revenue", value: `$${formatNumber(totalRevenue)}`, inline: true },
+    { name: "Profit", value: `$${formatNumber(totalProfit)}`, inline: true },
+    { name: "Player Breakdown", value: playerLines.join("\n") },
+  ];
+
+  if (settlementLines.length > 0) {
+    fields.push({ name: "Settlements", value: settlementLines.join("\n") });
+  }
+
   return {
     type: InteractionResponseType.CHANNEL_MESSAGE_WITH_SOURCE,
     data: {
       embeds: [{
         title: "Payout Settled",
         color: profitColor,
-        fields: [
-          { name: "Total Expenses", value: `$${formatNumber(totalExpenses)}`, inline: true },
-          { name: "Total Revenue", value: `$${formatNumber(totalRevenue)}`, inline: true },
-          { name: "Profit", value: `$${formatNumber(totalProfit)}`, inline: true },
-          { name: "Player Breakdown", value: playerLines.join("\n") },
-        ],
+        fields,
         footer: { text: "Cycle settled — all expenses and sales have been cleared" },
         timestamp: new Date().toISOString(),
       }],

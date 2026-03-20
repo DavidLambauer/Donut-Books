@@ -25,7 +25,7 @@ vi.mock("../../src/lib/supabase.js", () => {
       return {
         select: vi.fn().mockReturnValue({
           is: vi.fn().mockResolvedValue({
-            data: [{ total_revenue: 20000000 }],
+            data: [{ discord_user_id: "1", discord_username: "David", total_revenue: 20000000 }],
             error: null,
           }),
         }),
@@ -64,5 +64,9 @@ describe("handlePayout", () => {
     const breakdown = embed.fields.find((f) => f.name === "Player Breakdown");
     expect(breakdown.value).toContain("David");
     expect(breakdown.value).toContain("Alex");
+
+    const settlements = embed.fields.find((f) => f.name === "Settlements");
+    expect(settlements.value).toContain("David");
+    expect(settlements.value).toContain("Alex");
   });
 });
