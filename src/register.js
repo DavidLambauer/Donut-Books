@@ -84,6 +84,30 @@ const commands = [
     name: "history",
     description: "View transaction history and profit trends",
   },
+  {
+    name: "calculate-ratio",
+    description: "Calculate optimal Bone Block / Blaze Rod split for a budget",
+    options: [
+      {
+        name: "budget",
+        description: "Total amount to spend",
+        type: 10,
+        required: true,
+      },
+      {
+        name: "bone_block_price",
+        description: "Price per Bone Block",
+        type: 10,
+        required: true,
+      },
+      {
+        name: "blaze_rod_price",
+        description: "Price per Blaze Rod",
+        type: 10,
+        required: true,
+      },
+    ],
+  },
 ];
 
 async function registerCommands() {
