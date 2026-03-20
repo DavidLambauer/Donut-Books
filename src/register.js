@@ -80,6 +80,10 @@ const commands = [
       },
     ],
   },
+  {
+    name: "history",
+    description: "View transaction history and profit trends",
+  },
 ];
 
 async function registerCommands() {
