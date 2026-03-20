@@ -12,8 +12,9 @@ Players share the costs of running a kelp farm. When supplies are bought, the bu
 |---------|-------------|
 | `/expense item:<item> quantity:<number> total:<number>` | Log a supply purchase (Bone Blocks, Bones, Blaze Rods, Chests, Shulker Shells, Shulkers) |
 | `/sale quantity:<number> total:<number>` | Log a Dried Kelp Block sale |
-| `/balance` | View the current cycle's expenses, revenue, and per-player breakdown |
+| `/balance` | View the current cycle's expenses, revenue, and per-player breakdown (expenses + sales) |
 | `/payout` | Settle the cycle — shows each player's share and who needs to pay whom |
+| `/history` | View transaction history, past cycle summaries, and a profit trend chart |
 | `/calculate` | Calculate blaze rod requirements |
 
 ## Tech Stack
@@ -97,9 +98,11 @@ src/
     expense.js        # /expense command
     payout.js         # /payout command (with settlement transfers)
     sale.js           # /sale command
+    history.js        # /history command (transactions, past cycles, chart)
   lib/
     discord.js        # Request verification + helpers
     settlements.js    # Settlement transfer algorithm
+    chart.js          # QuickChart.io URL builder for profit trends
     supabase.js       # Database client
   register.js         # Slash command registration script
 supabase/
