@@ -1,62 +1,112 @@
-# DonutBooks
+# Donut Books
 
-Track shared expenses, sales, and profits for your DonutSMP farms. Log what you spend, record what you sell, and let DonutBooks calculate fair payouts based on everyone's investment.
+A Discord bot for tracking shared expenses, sales, and profits across a team. Built for the DonutSMP Minecraft kelp farm operation — log what you spend, record what you sell, and let the bot calculate fair payouts based on each player's investment.
+
+## How It Works
+
+Players share the costs of running a kelp farm. When supplies are bought, the buyer logs the expense. When dried kelp blocks are sold, the seller logs the sale. At the end of a cycle, `/payout` calculates how much each player is owed (proportional to their investment) and shows the exact transfers needed — who pays whom and how much.
+
+## Commands
+
+| Command | Description |
+|---------|-------------|
+| `/expense item:<item> quantity:<number> total:<number>` | Log a supply purchase (Bone Blocks, Bones, Blaze Rods, Chests, Shulker Shells, Shulkers) |
+| `/sale quantity:<number> total:<number>` | Log a Dried Kelp Block sale |
+| `/balance` | View the current cycle's expenses, revenue, and per-player breakdown |
+| `/payout` | Settle the cycle — shows each player's share and who needs to pay whom |
+| `/calculate` | Calculate blaze rod requirements |
+
+## Tech Stack
+
+- **Runtime:** Node.js (ES modules)
+- **Hosting:** Vercel (serverless, Discord Interactions Endpoint)
+- **Database:** Supabase (Postgres)
+- **Libraries:** discord-interactions, @supabase/supabase-js
+- **Testing:** vitest
 
 ## Setup
 
-### 1. Create Discord Application
+### 1. Discord Application
 
-1. Go to https://discord.com/developers/applications
+1. Go to [Discord Developer Portal](https://discord.com/developers/applications)
 2. Create a new application
-3. Under "Bot", create a bot and copy the token
-4. Under "General Information", copy the Application ID and Public Key
-5. Under "OAuth2 > URL Generator", select `bot` and `applications.commands` scopes
+3. Under **Bot**, create a bot and copy the token
+4. Under **General Information**, copy the Application ID and Public Key
+5. Under **OAuth2 > URL Generator**, select `bot` and `applications.commands` scopes
 6. Use the generated URL to invite the bot to your server
 
-### 2. Create Supabase Project
+### 2. Supabase
 
-1. Go to https://supabase.com and create a new project
-2. Go to SQL Editor and run the contents of `supabase/schema.sql`
-3. Copy your project URL and anon key from Settings > API
+1. Create a project at [supabase.com](https://supabase.com)
+2. Run `supabase/schema.sql` in the SQL Editor
+3. Copy your project URL and anon key from **Settings > API**
 
-### 3. Configure Environment
+### 3. Environment Variables
 
-Copy `.env.example` to `.env` and fill in the values:
-
-```
-DISCORD_APPLICATION_ID=your_app_id
-DISCORD_PUBLIC_KEY=your_public_key
-DISCORD_BOT_TOKEN=your_bot_token
-SUPABASE_URL=your_supabase_url
-SUPABASE_ANON_KEY=your_supabase_anon_key
+```bash
+cp .env.example .env
 ```
 
-### 4. Register Slash Commands
+Fill in the values:
+
+```
+DISCORD_APPLICATION_ID=
+DISCORD_PUBLIC_KEY=
+DISCORD_BOT_TOKEN=
+SUPABASE_URL=
+SUPABASE_ANON_KEY=
+```
+
+### 4. Install & Register Commands
 
 ```bash
 npm install
 npm run register
 ```
 
-### 5. Deploy to Vercel
+### 5. Deploy
 
 ```bash
 npx vercel
 ```
 
-Set the environment variables in Vercel dashboard (Settings > Environment Variables).
+Set the same environment variables in Vercel under **Settings > Environment Variables**.
 
-### 6. Set Discord Interactions Endpoint
-
-In your Discord application settings, set the "Interactions Endpoint URL" to:
+Then in your Discord application settings, set the **Interactions Endpoint URL** to:
 
 ```
 https://your-vercel-app.vercel.app/interactions
 ```
 
-## Commands
+## Development
 
-- `/expense item:<dropdown> quantity:<number> total:<number>` — Log a supply purchase
-- `/sale quantity:<number> total:<number>` — Log a Dried Kelp Block sale
-- `/balance` — View current cycle breakdown
-- `/payout` — Settle the current cycle
+```bash
+npm test          # run tests
+npm run test:watch # run tests in watch mode
+```
+
+## Project Structure
+
+```
+api/
+  interactions.js     # Vercel serverless endpoint
+src/
+  commands/
+    balance.js        # /balance command
+    calculate.js      # /calculate command
+    expense.js        # /expense command
+    payout.js         # /payout command (with settlement transfers)
+    sale.js           # /sale command
+  lib/
+    discord.js        # Request verification + helpers
+    settlements.js    # Settlement transfer algorithm
+    supabase.js       # Database client
+  register.js         # Slash command registration script
+supabase/
+  schema.sql          # Database schema
+tests/                # Test files mirroring src/ structure
+```
+
+## License
+
+ISC
