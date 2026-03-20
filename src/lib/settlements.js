@@ -21,7 +21,7 @@ export function calculateSettlements(breakdown, salesByPlayer) {
   const debtors = [];
   const creditors = [];
 
-  for (const [, player] of Object.entries(nets)) {
+  for (const player of Object.values(nets)) {
     if (player.net > 0) debtors.push({ ...player });
     else if (player.net < 0) creditors.push({ ...player, net: -player.net });
   }
@@ -41,8 +41,8 @@ export function calculateSettlements(breakdown, salesByPlayer) {
     debtor.net -= amount;
     creditor.net -= amount;
 
-    if (debtor.net === 0) debtors.shift();
-    if (creditor.net === 0) creditors.shift();
+    if (debtor.net <= 0) debtors.shift();
+    if (creditor.net <= 0) creditors.shift();
   }
 
   return settlements;
