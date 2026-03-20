@@ -65,8 +65,8 @@ describe("handlePayout", () => {
     expect(breakdown.value).toContain("David");
     expect(breakdown.value).toContain("Alex");
 
+    // David sold $20M, owed $13.33M -> pays Alex $6,666,667
     const settlements = embed.fields.find((f) => f.name === "Settlements");
-    expect(settlements.value).toContain("David");
-    expect(settlements.value).toContain("Alex");
+    expect(settlements.value).toContain("**David** → **Alex**");
   });
 });
