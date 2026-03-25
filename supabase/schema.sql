@@ -31,10 +31,10 @@ CREATE TABLE sales (
   created_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
 );
 
--- Disable RLS (bot uses server-side anon key only)
-ALTER TABLE payouts DISABLE ROW LEVEL SECURITY;
-ALTER TABLE expenses DISABLE ROW LEVEL SECURITY;
-ALTER TABLE sales DISABLE ROW LEVEL SECURITY;
+-- Enable RLS (bot uses service_role key which bypasses RLS)
+ALTER TABLE payouts ENABLE ROW LEVEL SECURITY;
+ALTER TABLE expenses ENABLE ROW LEVEL SECURITY;
+ALTER TABLE sales ENABLE ROW LEVEL SECURITY;
 
 -- Index for fast unsettled queries
 CREATE INDEX idx_expenses_unsettled ON expenses(payout_id) WHERE payout_id IS NULL;
