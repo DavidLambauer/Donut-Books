@@ -107,6 +107,12 @@ const commands = [
         required: true,
       },
       {
+        name: "blaze_rod_price",
+        description: "Price per Blaze Rod (supports 1k, 2.5m, 3b)",
+        type: 3,
+        required: true,
+      },
+      {
         name: "bone_price",
         description: "Price per Bone (supports 1k, 2.5m, 3b)",
         type: 3,
@@ -117,12 +123,6 @@ const commands = [
         description: "Price per Bone Block (supports 1k, 2.5m, 3b)",
         type: 3,
         required: false,
-      },
-      {
-        name: "blaze_rod_price",
-        description: "Price per Blaze Rod (supports 1k, 2.5m, 3b)",
-        type: 3,
-        required: true,
       },
     ],
   },
