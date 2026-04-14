@@ -8,7 +8,7 @@ const COMPACT_NUMBER_EXAMPLE = "Use a number like 1000, 1k, 2.5m, or 3b.";
 
 export function parseCompactNumber(value) {
   if (typeof value === "number") {
-    if (Number.isFinite(value)) {
+    if (Number.isFinite(value) && value >= 0) {
       return { value };
     }
 
