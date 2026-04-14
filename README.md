@@ -10,13 +10,13 @@ Players share the costs of running a kelp farm. When supplies are bought, the bu
 
 | Command | Description |
 |---------|-------------|
-| `/expense item:<item> quantity:<number> total:<number>` | Log a supply purchase (Bone Blocks, Bones, Blaze Rods, Chests, Shulker Shells, Shulkers) |
-| `/sale quantity:<number> total:<number>` | Log a Dried Kelp Block sale |
+| `/expense item:<item> quantity:<number> total:<amount> or price_per_item:<amount>` | Log a supply purchase. Monetary fields support `k`, `m`, and `b` suffixes like `1k` or `2.5m` |
+| `/sale quantity:<number> total:<amount> or price_per_item:<amount>` | Log a Dried Kelp Block sale. Monetary fields support `k`, `m`, and `b` suffixes like `1k` or `2.5m` |
 | `/balance` | View the current cycle's expenses, revenue, and per-player breakdown (expenses + sales) |
 | `/payout` | Settle the cycle — shows each player's share and who needs to pay whom |
 | `/history` | View transaction history, past cycle summaries, and a profit trend chart |
 | `/calculate` | Calculate blaze rod requirements |
-| `/calculate-ratio budget:<number> bone_block_price:<number> blaze_rod_price:<number>` | Calculate optimal Bone Block / Blaze Rod split for a budget (4:3 ratio) |
+| `/calculate-ratio budget:<amount> bone_price:<amount> or bone_block_price:<amount> blaze_rod_price:<amount>` | Calculate optimal Bones or Bone Blocks / Blaze Rod split for a budget (4:3 ratio). Monetary fields support `k`, `m`, and `b` suffixes |
 
 ## Tech Stack
 

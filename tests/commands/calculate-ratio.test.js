@@ -7,9 +7,9 @@ describe("handleCalculateRatio", () => {
     const interaction = {
       data: {
         options: [
-          { name: "budget", value: 3500000 },
-          { name: "bone_block_price", value: 50000 },
-          { name: "blaze_rod_price", value: 30000 },
+          { name: "budget", value: "3.5m" },
+          { name: "bone_block_price", value: "50k" },
+          { name: "blaze_rod_price", value: "30k" },
         ],
       },
     };
@@ -31,13 +31,33 @@ describe("handleCalculateRatio", () => {
     expect(body).toContain("$20,000");
   });
 
+  it("calculates_optimal_purchase_split_from_bones", () => {
+    const interaction = {
+      data: {
+        options: [
+          { name: "budget", value: "3m" },
+          { name: "bone_price", value: "15k" },
+          { name: "blaze_rod_price", value: "30k" },
+        ],
+      },
+    };
+
+    const result = handleCalculateRatio(interaction);
+
+    expect(result.type).toBe(InteractionResponseType.CHANNEL_MESSAGE_WITH_SOURCE);
+    const embed = result.data.embeds[0];
+    expect(embed.fields[0].name).toBe("Bones");
+    expect(embed.fields[0].value).toContain("132");
+    expect(embed.fields[1].value).toContain("33");
+  });
+
   it("shows_message_when_budget_too_small", () => {
     const interaction = {
       data: {
         options: [
-          { name: "budget", value: 100 },
-          { name: "bone_block_price", value: 50000 },
-          { name: "blaze_rod_price", value: 30000 },
+          { name: "budget", value: "100" },
+          { name: "bone_block_price", value: "50k" },
+          { name: "blaze_rod_price", value: "30k" },
         ],
       },
     };
@@ -46,5 +66,45 @@ describe("handleCalculateRatio", () => {
 
     const embed = result.data.embeds[0];
     expect(embed.description).toContain("too small");
+  });
+
+  it("rejects_missing_or_duplicate_bone_inputs", () => {
+    const missingBoneInput = {
+      data: {
+        options: [
+          { name: "budget", value: "3.5m" },
+          { name: "blaze_rod_price", value: "30k" },
+        ],
+      },
+    };
+
+    const duplicateBoneInput = {
+      data: {
+        options: [
+          { name: "budget", value: "3.5m" },
+          { name: "bone_price", value: "16.66667k" },
+          { name: "bone_block_price", value: "50k" },
+          { name: "blaze_rod_price", value: "30k" },
+        ],
+      },
+    };
+
+    expect(handleCalculateRatio(missingBoneInput).data.embeds[0].description).toContain("exactly one");
+    expect(handleCalculateRatio(duplicateBoneInput).data.embeds[0].description).toContain("exactly one");
+  });
+
+  it("rejects_invalid_abbreviated_amounts", () => {
+    const interaction = {
+      data: {
+        options: [
+          { name: "budget", value: "3.5x" },
+          { name: "bone_block_price", value: "50k" },
+          { name: "blaze_rod_price", value: "30k" },
+        ],
+      },
+    };
+
+    const result = handleCalculateRatio(interaction);
+    expect(result.data.embeds[0].description).toContain("must be valid");
   });
 });
