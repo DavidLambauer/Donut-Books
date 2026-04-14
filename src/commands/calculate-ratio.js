@@ -1,36 +1,75 @@
 import { InteractionResponseType } from "discord-interactions";
 import { formatNumber } from "../lib/discord.js";
-
-const BONE_BLOCKS_PER_UNIT = 4;
-const BLAZE_RODS_PER_UNIT = 3;
+import { parseCompactOption } from "../lib/compact-number.js";
+import { calculateOptimalPurchaseSplit } from "../lib/calculate-ratio.js";
 
 export function handleCalculateRatio(interaction) {
   const options = interaction.data.options || [];
 
-  const budget = options.find((o) => o.name === "budget")?.value || 0;
-  const boneBlockPrice = options.find((o) => o.name === "bone_block_price")?.value || 0;
-  const blazeRodPrice = options.find((o) => o.name === "blaze_rod_price")?.value || 0;
+  const budgetResult = parseCompactOption(options, "budget", "Budget");
+  const bonePriceResult = parseCompactOption(options, "bone_price", "Bone price");
+  const boneBlockPriceResult = parseCompactOption(options, "bone_block_price", "Bone Block price");
+  const blazeRodPriceResult = parseCompactOption(options, "blaze_rod_price", "Blaze Rod price");
 
-  const costPerUnit = (BONE_BLOCKS_PER_UNIT * boneBlockPrice) + (BLAZE_RODS_PER_UNIT * blazeRodPrice);
-
-  if (costPerUnit <= 0 || budget < costPerUnit) {
+  if (budgetResult.error || bonePriceResult.error || boneBlockPriceResult.error || blazeRodPriceResult.error) {
     return {
       type: InteractionResponseType.CHANNEL_MESSAGE_WITH_SOURCE,
       data: {
         embeds: [{
           title: "Budget Breakdown",
-          description: "Budget too small for a full set (4 Bone Blocks + 3 Blaze Rods).",
+          description: budgetResult.error || bonePriceResult.error || boneBlockPriceResult.error || blazeRodPriceResult.error,
           color: 0xed4245,
         }],
       },
     };
   }
 
-  const units = Math.floor(budget / costPerUnit);
-  const boneBlocks = units * BONE_BLOCKS_PER_UNIT;
-  const blazeRods = units * BLAZE_RODS_PER_UNIT;
-  const totalCost = units * costPerUnit;
-  const leftover = budget - totalCost;
+  if (budgetResult.missing || blazeRodPriceResult.missing) {
+    return {
+      type: InteractionResponseType.CHANNEL_MESSAGE_WITH_SOURCE,
+      data: {
+        embeds: [{
+          title: "Budget Breakdown",
+          description: "Budget and Blaze Rod price are required.",
+          color: 0xed4245,
+        }],
+      },
+    };
+  }
+
+  const budget = budgetResult.value;
+  const blazeRodPrice = blazeRodPriceResult.value;
+  const breakdown = calculateOptimalPurchaseSplit({
+    budget,
+    bonePrice: bonePriceResult.missing ? undefined : bonePriceResult.value,
+    boneBlockPrice: boneBlockPriceResult.missing ? undefined : boneBlockPriceResult.value,
+    blazeRodPrice,
+  });
+
+  if (breakdown.error) {
+    return {
+      type: InteractionResponseType.CHANNEL_MESSAGE_WITH_SOURCE,
+      data: {
+        embeds: [{
+          title: "Budget Breakdown",
+          description: breakdown.error,
+          color: 0xed4245,
+        }],
+      },
+    };
+  }
+
+  const boneField = breakdown.usingBones
+    ? {
+        name: "Bones",
+        value: `${formatNumber(breakdown.bones)} × $${formatNumber(breakdown.bonePrice)} = $${formatNumber(breakdown.bones * breakdown.bonePrice)}`,
+        inline: false,
+      }
+    : {
+        name: "Bone Blocks",
+        value: `${formatNumber(breakdown.boneBlocks)} × $${formatNumber(breakdown.boneBlockPrice)} = $${formatNumber(breakdown.boneBlocks * breakdown.boneBlockPrice)}`,
+        inline: false,
+      };
 
   return {
     type: InteractionResponseType.CHANNEL_MESSAGE_WITH_SOURCE,
@@ -39,10 +78,10 @@ export function handleCalculateRatio(interaction) {
         title: "Budget Breakdown",
         color: 0xfee75c,
         fields: [
-          { name: "Bone Blocks", value: `${formatNumber(boneBlocks)} × $${formatNumber(boneBlockPrice)} = $${formatNumber(boneBlocks * boneBlockPrice)}`, inline: false },
-          { name: "Blaze Rods", value: `${formatNumber(blazeRods)} × $${formatNumber(blazeRodPrice)} = $${formatNumber(blazeRods * blazeRodPrice)}`, inline: false },
-          { name: "Total", value: `$${formatNumber(totalCost)}`, inline: true },
-          { name: "Leftover", value: `$${formatNumber(leftover)}`, inline: true },
+          boneField,
+          { name: "Blaze Rods", value: `${formatNumber(breakdown.blazeRods)} × $${formatNumber(blazeRodPrice)} = $${formatNumber(breakdown.blazeRods * blazeRodPrice)}`, inline: false },
+          { name: "Total", value: `$${formatNumber(breakdown.totalCost)}`, inline: true },
+          { name: "Leftover", value: `$${formatNumber(breakdown.leftover)}`, inline: true },
         ],
       }],
     },
