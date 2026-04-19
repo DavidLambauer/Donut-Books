@@ -126,6 +126,42 @@ const commands = [
       },
     ],
   },
+  {
+    name: "calculate-profit",
+    description: "Estimate kelp output and profit from a budgeted recipe run",
+    options: [
+      {
+        name: "budget",
+        description: "Total amount to spend (supports 1k, 2.5m, 3b)",
+        type: 3,
+        required: true,
+      },
+      {
+        name: "blaze_rod_price",
+        description: "Price per Blaze Rod (supports 1k, 2.5m, 3b)",
+        type: 3,
+        required: true,
+      },
+      {
+        name: "kelp_block_price",
+        description: "Price per Dried Kelp Block (supports 1k, 2.5m, 3b)",
+        type: 3,
+        required: true,
+      },
+      {
+        name: "bone_price",
+        description: "Price per Bone (supports 1k, 2.5m, 3b)",
+        type: 3,
+        required: false,
+      },
+      {
+        name: "bone_block_price",
+        description: "Price per Bone Block (supports 1k, 2.5m, 3b)",
+        type: 3,
+        required: false,
+      },
+    ],
+  },
 ];
 
 async function registerCommands() {

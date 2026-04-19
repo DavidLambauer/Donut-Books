@@ -22,4 +22,9 @@ describe("parseCompactNumber", () => {
     expect(parseCompactNumber("abc").error).toContain("Use a number like");
     expect(parseCompactNumber("1t").error).toContain("Use a number like");
   });
+
+  it("rejects_negative_numbers", () => {
+    expect(parseCompactNumber(-100).error).toContain("Use a number like");
+    expect(parseCompactNumber("-100").error).toContain("Use a number like");
+  });
 });

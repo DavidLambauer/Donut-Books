@@ -6,6 +6,7 @@ import { handlePayout } from "../src/commands/payout.js";
 import { handleCalculate } from "../src/commands/calculate.js";
 import { handleHistory } from "../src/commands/history.js";
 import { handleCalculateRatio } from "../src/commands/calculate-ratio.js";
+import { handleCalculateProfit } from "../src/commands/calculate-profit.js";
 
 // Disable Vercel's automatic body parsing so we get the raw body for signature verification
 export const config = {
@@ -54,6 +55,7 @@ export default async function handler(req, res) {
       calculate: handleCalculate,
       history: handleHistory,
       "calculate-ratio": handleCalculateRatio,
+      "calculate-profit": handleCalculateProfit,
     };
 
     const commandHandler = commands[name];
